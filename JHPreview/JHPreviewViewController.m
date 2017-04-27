@@ -66,6 +66,12 @@
     scrollView.bounces = NO;
     
     // 添加图片
+    UIImageView *arrowImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"arrow_up"]];
+    [arrowImageView setFrame:CGRectMake(self.presentViewController.view.center.x - 17,
+                                        self.previewView.frame.origin.y - 20,
+                                        34,
+                                        11)];
+    [scrollView addSubview:arrowImageView];
     
     // 添加按钮
     CGFloat btnHeight = 57;
@@ -92,6 +98,7 @@
     [scrollView addSubview:btnView];
     [scrollView addSubview:self.previewView];
     [self.view addSubview:scrollView];
+    
 }
 
 - (void)showPreview{
