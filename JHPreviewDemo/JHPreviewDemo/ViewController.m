@@ -34,7 +34,7 @@
 -(void)longPressGRAction:(UILongPressGestureRecognizer *)sender{
     
     if (sender.state == UIGestureRecognizerStateBegan) {
-        NSLog(@"BEGIN");
+//        NSLog(@"BEGIN");
         JHPreviewAciton *action = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
         JHPreviewAciton *action2 = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
         AViewController *aVC = [[AViewController alloc]init];
@@ -49,7 +49,7 @@
     }
     
     if(sender.state == UIGestureRecognizerStateEnded){
-        NSLog(@"END");
+//        NSLog(@"END");
     }
 }
 
