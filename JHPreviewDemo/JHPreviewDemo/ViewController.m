@@ -32,9 +32,7 @@
 }
 
 -(void)longPressGRAction:(UILongPressGestureRecognizer *)sender{
-    
     if (sender.state == UIGestureRecognizerStateBegan) {
-//        NSLog(@"BEGIN");
         JHPreviewAciton *action = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
         JHPreviewAciton *action2 = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
         AViewController *aVC = [[AViewController alloc]init];
@@ -43,14 +41,20 @@
                                                                                acitonsArray:@[action, action2]
                                                                                 previewView:aVC.view
                                                                   andPreferredContentHeight:300];
-        
-        
+    
         [self.viewController showPreview];
+
     }
     
     if(sender.state == UIGestureRecognizerStateEnded){
 //        NSLog(@"END");
     }
+}
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    
+}
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    NSLog(@"%@",touches);
 }
 
 @end
