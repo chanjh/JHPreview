@@ -22,8 +22,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    
     // 长按手势
     UILongPressGestureRecognizer *longPressGR = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGRAction:)];
     longPressGR.minimumPressDuration = 0.2; // 设置最短长按的时间
@@ -38,7 +36,7 @@
         AViewController *aVC = [[AViewController alloc]init];
         
         self.viewController = [[JHPreviewViewController alloc]initWithPresentViewController:self
-                                                                               acitonsArray:@[action, action2]
+                                                                               acitonsArray:@[action, action2, action2, action2, action2]
                                                                                 previewView:aVC.view
                                                                   andPreferredContentHeight:300];
     
@@ -50,11 +48,6 @@
 //        NSLog(@"END");
     }
 }
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    
-}
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    NSLog(@"%@",touches);
-}
+
 
 @end
