@@ -12,6 +12,9 @@
 
 #define btnHeight 57
 
+#define previewViewFrame self.previewView.frame
+#define presentViewFrame self.presentViewController.view.frame
+
 @interface JHPreviewViewController ()<UIScrollViewDelegate>
 
 @property (nonatomic, strong) UIView *previewView;
@@ -96,41 +99,34 @@
 }
 
 - (void)setBtnView{
-    CGRect frame = self.presentViewController.view.frame;
-    CGSize size = frame.size;
-    
+    CGSize presentViewSize = presentViewFrame.size;
     CGFloat btnViewHeight = btnHeight*self.actionsArray.count;
-    UIView *btnView;
-    CGFloat leftHeight = size.height - (self.previewView.frame.origin.y - self.scrollView.contentOffset.y + self.previewView.frame.size.height);
+    CGFloat leftHeight = presentViewSize.height - (previewViewFrame.origin.y - self.scrollView.contentOffset.y + previewViewFrame.size.height);
+    
+    UIView *btnView =[[UIView alloc]init]; ;
+    self.btnView = btnView;
     if(leftHeight < btnViewHeight){
         // offset 不够时， btnView 跟在 scrollView 后面
-        btnView = [[UIView alloc]initWithFrame:CGRectMake(self.previewView.frame.origin.x,
-                                                          size.height, // - self.scrollView.contentOffset.y,
-                                                          self.previewView.frame.size.width,
-                                                          btnViewHeight)];
-        
-        self.scrollView.contentSize = CGSizeMake(size.width,
-                                                 size.height + btnViewHeight + 20);
-        // TODO 添加进来的动画
+        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                          previewViewFrame.origin.y + previewViewFrame.size.height + 20,
+                                          previewViewFrame.size.width,
+                                          btnViewHeight)];
+        self.scrollView.contentSize = CGSizeMake(presentViewSize.width,
+                                                 presentViewSize.height + btnViewHeight + 20);
         [self.scrollView addSubview:btnView];
     }else{
         // offset 足够， btnView 直接放在 self.view 底部
-        btnView = [[UIView alloc]initWithFrame:CGRectMake(self.previewView.frame.origin.x,
-                                                          size.height - btnViewHeight - 20,
-                                                          self.previewView.frame.size.width,
-                                                          btnViewHeight)];
-        [self.view addSubview:btnView];
+        [self setBtnViewInSelfView];
         
     }
     
-    self.btnView = btnView;
     btnView.clipsToBounds = YES;
     [btnView.layer setCornerRadius:10];
     [btnView setBackgroundColor:[UIColor whiteColor]];
     // 遍历 action 生成对应 button
     NSInteger index = 0;
     for (JHPreviewAciton *action in self.actionsArray){
-        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(0, index*btnHeight, self.previewView.frame.size.width, btnHeight)];
+        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(0, index*btnHeight, previewViewFrame.size.width, btnHeight)];
         [btn.layer setBorderWidth:0.5];
         [btn setTitle:action.title forState:UIControlStateNormal];
         [btn setTitleColor:[UIColor colorWithRed:0.0f/255.0f green:122.0f/255.0f blue:255.0f/255.0f alpha:1.0] forState:UIControlStateNormal];
@@ -149,44 +145,65 @@
 
 # pragma mark - UIScrollViewDelegate
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    NSLog(@"%f",scrollView.contentOffset.y);
     
-    CGRect presentViewFrame = self.presentViewController.view.frame;
     CGSize presentViewSize = presentViewFrame.size;
+    CGFloat leftHeight =  presentViewSize.height - previewViewFrame.size.height - previewViewFrame.origin.y - 20;
+    BOOL isBtnViewOnBottom = NO;
+    
+    if(self.btnView.frame.origin.y == presentViewFrame.size.height - btnHeight*self.actionsArray.count - 20){
+        isBtnViewOnBottom = YES;
+    }
+    
     
     // 第一次向上 offset 到 60 时
     if(scrollView.contentOffset.y >= 60 && !self.isBtnViewExist){
         [self setBtnView];
     }
     // 当移动到 btnView 完全显示出来的时候
-    else if(scrollView.contentOffset.y >= self.btnView.frame.size.height + 20 && self.isBtnViewExist){
-        CGSize size = self.presentViewController.view.frame.size;
-        [self.btnView setFrame:CGRectMake(self.previewView.frame.origin.x,
-                                                          size.height - btnHeight*self.actionsArray.count - 20,
-                                                          self.previewView.frame.size.width,
-                                                          btnHeight*self.actionsArray.count)];
-        [self.btnView removeFromSuperview];
-
-        [self.view addSubview:self.btnView];
+    else if(scrollView.contentOffset.y >= self.btnView.frame.size.height + 20 - leftHeight && self.isBtnViewExist){
+        [self setBtnViewInSelfView];
     }
     // 当 btnView 已经固定在底部，并且偏移量到 btnView 上时
-    CGFloat offset = self.previewView.frame.origin.y + self.previewView.frame.size.height - (presentViewSize.height - self.btnView.frame.size.height) + 40;
+    CGFloat offset = previewViewFrame.origin.y + previewViewFrame.size.height - (presentViewSize.height - self.btnView.frame.size.height) + 30;
     if(scrollView.contentOffset.y <= offset
-            && self.btnView.frame.origin.y == self.presentViewController.view.frame.size.height - btnHeight*self.actionsArray.count - 20
-            && self.isBtnViewExist){
-
-        [self.btnView setFrame:CGRectMake(self.previewView.frame.origin.x,
-                                                          offset + presentViewSize.height - self.btnView.frame.size.height,
-                                                          self.previewView.frame.size.width,
-                                                          self.btnView.frame.size.height)];
+       && isBtnViewOnBottom
+       && self.isBtnViewExist){
+        // btnView 太低时，不进行调整
+        
+        
+        
+        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                          offset + presentViewSize.height - self.btnView.frame.size.height,
+                                          previewViewFrame.size.width,
+                                          self.btnView.frame.size.height)];
         
         self.scrollView.contentSize = CGSizeMake(presentViewSize.width,
                                                  offset + presentViewSize.height + 20);
         [self.btnView removeFromSuperview];
         [self.scrollView addSubview:self.btnView];
     }
+    
+    // 当向下移动到 半个 btn 高度时， btnView 消失
+    if(self.isBtnViewExist
+            &&[self.btnView.superview isEqual:self.scrollView]
+            //             &&scrollView.contentOffset.y <
+            ){
+        
+    }
+    
 }
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset{
     
 }
-
+# pragma mark - 私有方法
+- (void)setBtnViewInSelfView{
+    CGSize size = presentViewFrame.size;
+    [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                      size.height - btnHeight*self.actionsArray.count - 20,
+                                      previewViewFrame.size.width,
+                                      btnHeight*self.actionsArray.count)];
+    [self.btnView removeFromSuperview];
+    [self.view addSubview:self.btnView];
+}
 @end
