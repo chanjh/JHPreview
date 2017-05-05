@@ -15,6 +15,7 @@
 @interface ViewController ()<UIGestureRecognizerDelegate>
 
 @property (nonatomic, strong) JHPreviewViewController *viewController;
+@property (weak, nonatomic) IBOutlet UITextField *textField;
 
 @end
 
@@ -32,11 +33,20 @@
 -(void)longPressGRAction:(UILongPressGestureRecognizer *)sender{
     if (sender.state == UIGestureRecognizerStateBegan) {
         JHPreviewAciton *action = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
-        JHPreviewAciton *action2 = [JHPreviewAciton actionWithTitle:@"ddd" actionStyle:JHPreviewAcionStyleDefault handler:nil];
-        AViewController *aVC = [[AViewController alloc]init];
         
+        AViewController *aVC = [[AViewController alloc]init];
+        NSMutableArray *array = [NSMutableArray array];
+        NSInteger num;
+        if(self.textField.text.length){
+            num = [self.textField.text integerValue];
+        }else{
+            num = 2;
+        }
+        for (int i = 0; i < num; i++){
+            [array addObject:action];
+        }
         self.viewController = [[JHPreviewViewController alloc]initWithPresentViewController:self
-                                                                               acitonsArray:@[action, action2, action2, action2, action2]
+                                                                               acitonsArray:array
                                                                                 previewView:aVC.view
                                                                   andPreferredContentHeight:300];
     
@@ -45,9 +55,11 @@
     }
     
     if(sender.state == UIGestureRecognizerStateEnded){
-//        NSLog(@"END");
+
     }
 }
-
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    [[[UIApplication sharedApplication] keyWindow] endEditing:YES];
+}
 
 @end

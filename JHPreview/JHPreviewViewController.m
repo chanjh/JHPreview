@@ -15,18 +15,19 @@
 #define previewViewFrame self.previewView.frame
 #define presentViewFrame self.presentViewController.view.frame
 
-@interface JHPreviewViewController ()<UIScrollViewDelegate, UIGestureRecognizerDelegate>
+@interface JHPreviewViewController ()<UIScrollViewDelegate, UIGestureRecognizerDelegate, CAAnimationDelegate>
 
 @property (nonatomic, strong) UIView *previewView;
 @property (nonatomic, strong) UIViewController *presentViewController;
 @property (nonatomic, strong) UIScrollView *scrollView;
 @property (nonatomic, strong) UIView *btnView;
+@property (nonatomic, strong) UIView *arrowImageView;
 @property (nonatomic, assign) CGFloat preferredContentHeight;
 @property (nonatomic, strong) JHPeekViewController *peekViewController;
 @property (nonatomic, strong) NSArray <JHPreviewAciton *> *actionsArray;
 @property (nonatomic, assign) CGFloat startOffset;
 
-@property (nonatomic, assign) BOOL isBtnViewExist;
+@property (atomic, assign) BOOL isBtnViewExist;
 @property (nonatomic, strong) UIVisualEffectView *visualEffectView;
 
 @end
@@ -80,21 +81,15 @@
     [UIView commitAnimations];
 
     // 添加 arrowup 图片
-    UIImageView *arrowImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"arrow_up"]];
-    [arrowImageView setFrame:CGRectMake(self.presentViewController.view.center.x - 17,
-                                        previewViewFrame.origin.y - 20,
-                                        34, 11)];
-    [self.scrollView addSubview:arrowImageView];
+    [self.scrollView addSubview:self.arrowImageView];
 }
 
 - (void)setBtnView{
     CGSize presentViewSize = presentViewFrame.size;
     CGFloat btnViewHeight = btnHeight*self.actionsArray.count;
     CGFloat leftHeight = presentViewSize.height - (previewViewFrame.origin.y - self.scrollView.contentOffset.y + previewViewFrame.size.height);
-    
     self.isBtnViewExist = YES;
     [self.btnView setHidden:NO];
-    
     if(leftHeight < btnViewHeight){
         // offset 不够时， btnView 跟在 scrollView 后面
         [self setBtnViewInScrollView];
@@ -151,7 +146,6 @@
     }
     oldY = newY;
     
-
     CGSize presentViewSize = presentViewFrame.size;
     CGFloat leftHeight =  presentViewSize.height - previewViewFrame.size.height - previewViewFrame.origin.y - 20;
     
@@ -162,33 +156,81 @@
     
     // 第一次向上 offset 到 60
     if(ret && newY >= 60 && !self.isBtnViewExist){
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:0.4f];
         [self setBtnView];
+        [UIView commitAnimations];
         NSLog(@"第一次向上 offset 到 60");
-    }
-    
-    // 移动到 btnView 完全显示出来
-    else if(ret && newY > btnHeight*self.actionsArray.count + 20 - leftHeight && self.isBtnViewExist){
-        [self setBtnViewInSelfView];
-        NSLog(@"移动到 btnView 完全显示出来");
-    }
-    
-    // btnView 已经固定在底部，并且偏移量到 btnView 上
-    CGFloat offset = self.btnView.frame.size.height + previewViewFrame.origin.y + previewViewFrame.size.height - presentViewFrame.size.height;
-    if(!ret && newY < offset + 40 && isBtnViewOnBottom && self.isBtnViewExist){
-        [self setBtnViewInScrollView];
-//        NSLog(@"btnView 已经固定在底部，并且偏移量到 btnView 上");
-        return;
     }
     
     // 向下移动到 半个 btn 高度
     if(self.isBtnViewExist && !ret
        &&[self.btnView.superview isEqual:self.scrollView]
-       &&newY < self.scrollView.contentSize.height - presentViewFrame.size.height - btnHeight/2 - 20){
-        
-//        NSLog(@"向下移动到 半个 btn 高度");
+       &&newY < self.scrollView.contentSize.height - presentViewFrame.size.height - btnHeight - 20){
+//        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+//                                          self.btnView.frame.origin.y - newY,
+//                                          previewViewFrame.size.width,
+//                                          self.btnView.frame.size.height)];
+//        [self.btnView removeFromSuperview];
+//        [self.view addSubview:self.btnView];
+//        [self removeBtnViewFromSuper];
+        NSLog(@"向下移动到 半个 btn 高度");
+        return;
+    }
+    if(newY <= 0
+       && self.btnView.frame.size.height + 20 + previewViewFrame.size.height + previewViewFrame.origin.y <= presentViewSize.height){
+        if(!ret){
+            CGSize size = presentViewFrame.size;
+            [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                              size.height - btnHeight*self.actionsArray.count - 20,
+                                              previewViewFrame.size.width,
+                                              btnHeight*self.actionsArray.count)];
+            [self.btnView removeFromSuperview];
+            [self.scrollView addSubview:self.btnView];
+            NSLog(@"???");
+        }else{
+            
+        }
+        return;
+    }
+    // 移动到 btnView 完全显示出来
+    if(ret && newY > btnHeight*self.actionsArray.count + 20 - leftHeight && self.isBtnViewExist){
+        [self setBtnViewInSelfView];
+        NSLog(@"移动到 btnView 完全显示出来");
+    }
+    // btnView 已经固定在底部，并且偏移量到 btnView 上
+    CGFloat offset = self.btnView.frame.size.height + previewViewFrame.origin.y + previewViewFrame.size.height - presentViewFrame.size.height;
+    if(!ret && newY < offset + 40 && isBtnViewOnBottom && self.isBtnViewExist){
+        [self setBtnViewInScrollView];
+        NSLog(@"btnView 已经固定在底部，并且偏移量到 btnView 上");
+        return;
     }
 }
+-(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
+    if(self.isBtnViewExist
+       &&[self.btnView.superview isEqual:self.scrollView]
+       &&scrollView.contentOffset.y >= self.scrollView.contentSize.height - presentViewFrame.size.height - btnHeight - 20){
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:0.4f];
+        [self.scrollView setContentOffset:CGPointMake(0, self.scrollView.contentSize.height - presentViewFrame.size.height)];
+        [UIView commitAnimations];
+        NSLog(@"还不到 半个 btn 高度");
+    }
+    if(!self.isBtnViewExist){
+        [self dismiss];
+    }
+}
+
 # pragma mark - Getter and Setter
+- (UIView *)arrowImageView{
+    if(!_arrowImageView){
+        _arrowImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"arrow_up"]];
+        [_arrowImageView setFrame:CGRectMake(self.presentViewController.view.center.x - 17,
+                                            previewViewFrame.origin.y - 20,
+                                            34, 11)];
+    }
+    return _arrowImageView;
+}
 - (UIScrollView *)scrollView{
     if(!_scrollView){
         _scrollView = [[UIScrollView alloc]initWithFrame:presentViewFrame];
@@ -208,6 +250,10 @@
 - (UIView *)btnView{
     if(!_btnView){
         _btnView = [[UIView alloc]init];
+        [_btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                      presentViewFrame.size.height,
+                                      previewViewFrame.size.width,
+                                      btnHeight*self.actionsArray.count)];
         [_btnView.layer setCornerRadius:10];
         [_btnView setClipsToBounds:YES];
         [_btnView setBackgroundColor:[UIColor whiteColor]];
@@ -242,22 +288,58 @@
                                       previewViewFrame.size.width,
                                       btnHeight*self.actionsArray.count)];
     self.scrollView.contentSize = CGSizeMake(presentViewFrame.size.width,
-                                             self.btnView.frame.size.height + self.btnView.frame.origin.y + 20);
+                                                 self.btnView.frame.size.height + self.btnView.frame.origin.y + 20);
     [self.btnView removeFromSuperview];
     [self.scrollView addSubview:self.btnView];
 }
 
 - (void)scrollViewReplace{
-    CGFloat offset = self.scrollView.contentSize.height - presentViewFrame.size.height;;
+    CGFloat offset = self.scrollView.contentSize.height - presentViewFrame.size.height;
     [UIView animateWithDuration:0.4f animations:^{
         [self.scrollView setContentOffset:CGPointMake(0, offset)];
-    } completion:^(BOOL finished) {
-//        [self setBtnViewInScrollView];
-//        [self.scrollView setContentOffset:CGPointMake(0, offset)];
-    }];
+    } completion:nil];
+}
+
+- (void)removeBtnViewFromSuper{
+    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position.y"];
+    animation.toValue = [NSNumber numberWithFloat:presentViewFrame.size.height];
+    animation.duration = 0.2f;
+    [self.btnView.layer addAnimation:animation forKey:nil];
+    
+//    [UIView animateWithDuration:0.4f animations:^{
+//        CGFloat distance = self.btnView.frame.origin.y - previewViewFrame.origin.y + previewViewFrame.size.height;
+//        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+//                                          presentViewFrame.size.height,
+//                                          previewViewFrame.size.width,
+//                                          btnHeight*self.actionsArray.count)];
+//        
+//        self.scrollView.contentSize = CGSizeMake(presentViewFrame.size.width,
+//                                                 presentViewFrame.size.height + distance);
+//    }];
+    self.isBtnViewExist = NO;
 }
 - (void)dismiss{
-    [self.view removeFromSuperview];
+    [self.arrowImageView setHidden:YES];
+    // 缩小
+    CABasicAnimation *scaleAnima = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+    scaleAnima.toValue = [NSNumber numberWithFloat:0.0f];
+    // 透明度降低
+    CABasicAnimation *alphaAnima = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    alphaAnima.toValue = [NSNumber numberWithFloat:0.3f];
+    // 组合动画
+    CAAnimationGroup *groupAnimation = [CAAnimationGroup animation];
+    groupAnimation.animations = [NSArray arrayWithObjects:scaleAnima, alphaAnima, nil];
+    groupAnimation.duration = 0.3f;
+    groupAnimation.removedOnCompletion = NO;
+    groupAnimation.fillMode = kCAFillModeForwards;
+    groupAnimation.delegate = self;
+    
+    [self.previewView.layer addAnimation:groupAnimation forKey:@"groupAnimation"];
+}
+-(void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag{
+    if(flag){
+        [self.view removeFromSuperview];
+    }
 }
 
 @end
