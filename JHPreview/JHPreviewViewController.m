@@ -167,13 +167,13 @@
     if(self.isBtnViewExist && !ret
        &&[self.btnView.superview isEqual:self.scrollView]
        &&newY < self.scrollView.contentSize.height - presentViewFrame.size.height - btnHeight - 20){
-//        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
-//                                          self.btnView.frame.origin.y - newY,
-//                                          previewViewFrame.size.width,
-//                                          self.btnView.frame.size.height)];
-//        [self.btnView removeFromSuperview];
-//        [self.view addSubview:self.btnView];
-//        [self removeBtnViewFromSuper];
+        [self.btnView setFrame:CGRectMake(previewViewFrame.origin.x,
+                                          self.btnView.frame.origin.y - newY,
+                                          previewViewFrame.size.width,
+                                          self.btnView.frame.size.height)];
+        [self.btnView removeFromSuperview];
+        [self.view addSubview:self.btnView];
+        [self removeBtnViewFromSuper];
         NSLog(@"向下移动到 半个 btn 高度");
         return;
     }
